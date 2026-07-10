@@ -12,7 +12,6 @@ import {
   FileText,
   CheckCircle,
   Users,
-  Settings,
   ClipboardList,
   Anchor,
   BarChart3,
@@ -110,7 +109,6 @@ function getNavigationItems(role: User['role'], t: (key: string) => string) {
     { href: '/dashboard/documents', label: t('sidebar.documents'), icon: FileText },
     { href: '/dashboard/analytics', label: t('sidebar.statistics'), icon: BarChart3 },
     { href: '/dashboard/users', label: t('sidebar.users'), icon: Users },
-    { href: '/dashboard/settings', label: t('sidebar.settings'), icon: Settings },
   ]
 
   switch (role) {
