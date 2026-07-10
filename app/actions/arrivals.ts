@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { notifyNewArrivalForAuthority } from './notifications'
+import { saveFileToDisk } from '@/lib/file-storage'
 
 export async function createArrival(formData: FormData) {
   const session = await getSession()
@@ -77,15 +78,16 @@ export async function createArrival(formData: FormData) {
     
     // Save NOA document
     const noaBuffer = Buffer.from(await noaDocument.arrayBuffer())
-    const noaBase64 = noaBuffer.toString('base64')
+    const noaPath = await saveFileToDisk(arrivalId, 'NOA', noaDocument.name, noaBuffer)
     
     await sql`
-      INSERT INTO documents (arrival_id, document_type, file_name, file_data, file_size, mime_type, uploaded_by)
+      INSERT INTO documents (arrival_id, document_type, file_name, file_url, file_data, file_size, mime_type, uploaded_by)
       VALUES (
         ${arrivalId}, 
         'NOA', 
         ${noaDocument.name}, 
-        ${noaBase64}, 
+        ${noaPath},
+        NULL,
         ${noaDocument.size}, 
         ${noaDocument.type || 'application/pdf'},
         ${session.user.id}
@@ -94,15 +96,16 @@ export async function createArrival(formData: FormData) {
     
     // Save FAL1 document
     const fal1Buffer = Buffer.from(await fal1Document.arrayBuffer())
-    const fal1Base64 = fal1Buffer.toString('base64')
+    const fal1Path = await saveFileToDisk(arrivalId, 'FAL1', fal1Document.name, fal1Buffer)
     
     await sql`
-      INSERT INTO documents (arrival_id, document_type, file_name, file_data, file_size, mime_type, uploaded_by)
+      INSERT INTO documents (arrival_id, document_type, file_name, file_url, file_data, file_size, mime_type, uploaded_by)
       VALUES (
         ${arrivalId}, 
         'FAL1', 
         ${fal1Document.name}, 
-        ${fal1Base64}, 
+        ${fal1Path},
+        NULL,
         ${fal1Document.size}, 
         ${fal1Document.type || 'application/pdf'},
         ${session.user.id}

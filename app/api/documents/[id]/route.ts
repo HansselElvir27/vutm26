@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import fs from 'fs/promises'
 
 export async function GET(
   request: NextRequest,
@@ -18,6 +19,7 @@ export async function GET(
     const result = await sql`
       SELECT 
         d.file_name,
+        d.file_url,
         d.file_data,
         d.mime_type,
         d.arrival_id,
@@ -44,16 +46,29 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    if (!doc.file_data) {
-      return NextResponse.json({ error: 'Archivo no disponible' }, { status: 404 })
-    }
-
     // Check if download is requested
     const { searchParams } = new URL(request.url)
     const isDownload = searchParams.get('download') === 'true'
 
-    // Decode base64 to buffer
-    const fileBuffer = Buffer.from(doc.file_data, 'base64')
+    // Load file buffer from disk if path exists, otherwise fall back to DB base64 data
+    let fileBuffer: Buffer
+
+    if (doc.file_url) {
+      try {
+        fileBuffer = await fs.readFile(doc.file_url)
+      } catch (err) {
+        console.warn(`File not found at file_url: ${doc.file_url}, checking file_data fallback...`, err)
+        if (doc.file_data) {
+          fileBuffer = Buffer.from(doc.file_data, 'base64')
+        } else {
+          return NextResponse.json({ error: 'Archivo no disponible' }, { status: 404 })
+        }
+      }
+    } else if (doc.file_data) {
+      fileBuffer = Buffer.from(doc.file_data, 'base64')
+    } else {
+      return NextResponse.json({ error: 'Archivo no disponible' }, { status: 404 })
+    }
     
     // Return file with appropriate headers
     const disposition = isDownload ? 'attachment' : 'inline'

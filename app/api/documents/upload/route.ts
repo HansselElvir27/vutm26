@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { saveFileToDisk } from '@/lib/file-storage'
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
@@ -35,14 +36,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No tiene permiso para subir documentos a este arribo' }, { status: 403 })
     }
 
-    // Convert file to base64 for storage
+    // Save file to disk
     const fileBuffer = Buffer.from(await file.arrayBuffer())
-    const fileBase64 = fileBuffer.toString('base64')
+    const filePath = await saveFileToDisk(arrivalId, documentType, file.name, fileBuffer)
 
-    // Insert document with file data
+    // Insert document referencing the disk path
     const result = await sql`
-      INSERT INTO documents (arrival_id, document_type, file_name, file_data, file_size, mime_type, uploaded_by)
-      VALUES (${arrivalId}, ${documentType}, ${file.name}, ${fileBase64}, ${file.size}, ${file.type || 'application/pdf'}, ${session.user.id})
+      INSERT INTO documents (arrival_id, document_type, file_name, file_url, file_data, file_size, mime_type, uploaded_by)
+      VALUES (${arrivalId}, ${documentType}, ${file.name}, ${filePath}, NULL, ${file.size}, ${file.type || 'application/pdf'}, ${session.user.id})
       RETURNING id
     `
 
