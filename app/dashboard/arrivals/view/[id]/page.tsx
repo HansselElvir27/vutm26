@@ -220,7 +220,7 @@ export default async function ArrivalDetailPage({ params }: PageProps) {
                     <dd className="font-medium">{arrival.voyage_number}</dd>
                   </div>
                 )}
-                {arrival.vessel_type === 'Contenedor' && (
+                {(arrival.vessel_type === 'Contenedor' || arrival.vessel_type === 'Carga General' || arrival.vessel_type === 'Contenedor Frigorífico') && (
                   <>
                     {arrival.container_total !== null && arrival.container_total !== undefined && (
                       <div>

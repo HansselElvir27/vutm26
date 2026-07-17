@@ -50,6 +50,7 @@ interface ArrivalFormProps {
 const vesselTypes = [
   'Carga General',
   'Contenedor',
+  'Contenedor Frigorífico',
   'Tanquero',
   'Granelero',
   'RoRo',
@@ -61,8 +62,9 @@ const vesselTypes = [
 ]
 
 const vesselTypesEn = [
-  'GeneralContainer',
-  ' Cargo',
+  'General Cargo',
+  'Container',
+  'Reefer Container',
   'Tanker',
   'Bulk Carrier',
   'RoRo',
@@ -285,7 +287,7 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
             />
           </div>
 
-          {vesselType === 'Contenedor' && (
+          {(vesselType === 'Contenedor' || vesselType === 'Carga General' || vesselType === 'Contenedor Frigorífico') && (
             <>
               <div className="space-y-2">
                 <Label htmlFor="container_total">Total de Contenedores</Label>
