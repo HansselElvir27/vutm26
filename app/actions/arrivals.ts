@@ -36,6 +36,14 @@ export async function createArrival(formData: FormData) {
   const crewChange = formData.get('crew_change') === 'true'
   const needsHelp = formData.get('needs_help') === 'true'
   const observation = formData.get('observation') as string
+
+  // New vessel type fields
+  const containerTotal = formData.get('container_total') ? Number(formData.get('container_total')) : null
+  const containerLoaded = formData.get('container_loaded') ? Number(formData.get('container_loaded')) : null
+  const containerEmpty = formData.get('container_empty') ? Number(formData.get('container_empty')) : null
+  const passengerTotal = formData.get('passenger_total') ? Number(formData.get('passenger_total')) : null
+  const passengerDisembark = formData.get('passenger_disembark') ? Number(formData.get('passenger_disembark')) : null
+  const passengerOnboard = formData.get('passenger_onboard') ? Number(formData.get('passenger_onboard')) : null
   
   // Get document files
   const noaDocument = formData.get('noa_document') as File | null
@@ -62,14 +70,18 @@ export async function createArrival(formData: FormData) {
         ship_name, omi_number, flag, vessel_type, call_sign, gt, length, breadth,
         voyage_number, last_port_name, last_port_country, port_of_arrival,
         estimated_arrival_date, estimated_arrival_time, is_donation, is_fast_arrival,
-        crew_change, needs_help, observation, created_by, status
+        crew_change, needs_help, observation, created_by, status,
+        container_total, container_loaded, container_empty,
+        passenger_total, passenger_disembark, passenger_onboard
       ) VALUES (
         ${shipName}, ${omiNumber}, ${flag || null}, ${vesselType || null},
         ${callSign || null}, ${gt || null}, ${length || null}, ${breadth || null},
         ${voyageNumber || null}, ${lastPortName || null}, ${lastPortCountry || null},
         ${portOfArrival}, ${estimatedArrivalDate}, ${estimatedArrivalTime || null},
         ${isDonation}, ${isFastArrival}, ${crewChange}, ${needsHelp},
-        ${observation || null}, ${session.user.id}, 'pending'
+        ${observation || null}, ${session.user.id}, 'pending',
+        ${containerTotal}, ${containerLoaded}, ${containerEmpty},
+        ${passengerTotal}, ${passengerDisembark}, ${passengerOnboard}
       )
       RETURNING id
     `
@@ -163,6 +175,14 @@ export async function updateArrival(arrivalId: string, formData: FormData) {
   const needsHelp = formData.get('needs_help') === 'true'
   const observation = formData.get('observation') as string
 
+  // New vessel type fields
+  const containerTotal = formData.get('container_total') ? Number(formData.get('container_total')) : null
+  const containerLoaded = formData.get('container_loaded') ? Number(formData.get('container_loaded')) : null
+  const containerEmpty = formData.get('container_empty') ? Number(formData.get('container_empty')) : null
+  const passengerTotal = formData.get('passenger_total') ? Number(formData.get('passenger_total')) : null
+  const passengerDisembark = formData.get('passenger_disembark') ? Number(formData.get('passenger_disembark')) : null
+  const passengerOnboard = formData.get('passenger_onboard') ? Number(formData.get('passenger_onboard')) : null
+
   await sql`
     UPDATE arrivals SET
       ship_name = ${shipName},
@@ -184,6 +204,12 @@ export async function updateArrival(arrivalId: string, formData: FormData) {
       crew_change = ${crewChange},
       needs_help = ${needsHelp},
       observation = ${observation || null},
+      container_total = ${containerTotal},
+      container_loaded = ${containerLoaded},
+      container_empty = ${containerEmpty},
+      passenger_total = ${passengerTotal},
+      passenger_disembark = ${passengerDisembark},
+      passenger_onboard = ${passengerOnboard},
       updated_at = NOW()
     WHERE id = ${arrivalId}
   `

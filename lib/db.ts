@@ -51,6 +51,12 @@ export interface Arrival {
   status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'zarpe_issued'
   created_at: string
   updated_at: string
+  container_total?: number | null
+  container_loaded?: number | null
+  container_empty?: number | null
+  passenger_total?: number | null
+  passenger_disembark?: number | null
+  passenger_onboard?: number | null
 }
 
 export interface Document {

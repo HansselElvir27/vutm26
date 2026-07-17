@@ -35,6 +35,12 @@ interface Arrival {
   crew_change?: boolean
   needs_help?: boolean
   observation?: string
+  container_total?: number
+  container_loaded?: number
+  container_empty?: number
+  passenger_total?: number
+  passenger_disembark?: number
+  passenger_onboard?: number
 }
 
 interface ArrivalFormProps {
@@ -278,6 +284,76 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
               defaultValue={arrival?.voyage_number || ''}
             />
           </div>
+
+          {vesselType === 'Contenedor' && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="container_total">Total de Contenedores</Label>
+                <Input
+                  id="container_total"
+                  name="container_total"
+                  type="number"
+                  placeholder="0"
+                  defaultValue={arrival?.container_total ?? ''}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="container_loaded">Contenedores Cargados</Label>
+                <Input
+                  id="container_loaded"
+                  name="container_loaded"
+                  type="number"
+                  placeholder="0"
+                  defaultValue={arrival?.container_loaded ?? ''}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="container_empty">Contenedores sin Carga</Label>
+                <Input
+                  id="container_empty"
+                  name="container_empty"
+                  type="number"
+                  placeholder="0"
+                  defaultValue={arrival?.container_empty ?? ''}
+                />
+              </div>
+            </>
+          )}
+
+          {vesselType === 'Crucero' && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="passenger_total">Total de Pasajeros</Label>
+                <Input
+                  id="passenger_total"
+                  name="passenger_total"
+                  type="number"
+                  placeholder="0"
+                  defaultValue={arrival?.passenger_total ?? ''}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passenger_disembark">Pasajeros Desembarcaron</Label>
+                <Input
+                  id="passenger_disembark"
+                  name="passenger_disembark"
+                  type="number"
+                  placeholder="0"
+                  defaultValue={arrival?.passenger_disembark ?? ''}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="passenger_onboard">Pasajeros no Desembarcaron</Label>
+                <Input
+                  id="passenger_onboard"
+                  name="passenger_onboard"
+                  type="number"
+                  placeholder="0"
+                  defaultValue={arrival?.passenger_onboard ?? ''}
+                />
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

@@ -220,6 +220,50 @@ export default async function ArrivalDetailPage({ params }: PageProps) {
                     <dd className="font-medium">{arrival.voyage_number}</dd>
                   </div>
                 )}
+                {arrival.vessel_type === 'Contenedor' && (
+                  <>
+                    {arrival.container_total !== null && arrival.container_total !== undefined && (
+                      <div>
+                        <dt className="text-sm text-muted-foreground">Total de Contenedores</dt>
+                        <dd className="font-medium">{arrival.container_total}</dd>
+                      </div>
+                    )}
+                    {arrival.container_loaded !== null && arrival.container_loaded !== undefined && (
+                      <div>
+                        <dt className="text-sm text-muted-foreground">Contenedores Cargados</dt>
+                        <dd className="font-medium">{arrival.container_loaded}</dd>
+                      </div>
+                    )}
+                    {arrival.container_empty !== null && arrival.container_empty !== undefined && (
+                      <div>
+                        <dt className="text-sm text-muted-foreground">Contenedores sin Carga</dt>
+                        <dd className="font-medium">{arrival.container_empty}</dd>
+                      </div>
+                    )}
+                  </>
+                )}
+                {arrival.vessel_type === 'Crucero' && (
+                  <>
+                    {arrival.passenger_total !== null && arrival.passenger_total !== undefined && (
+                      <div>
+                        <dt className="text-sm text-muted-foreground">Total de Pasajeros</dt>
+                        <dd className="font-medium">{arrival.passenger_total}</dd>
+                      </div>
+                    )}
+                    {arrival.passenger_disembark !== null && arrival.passenger_disembark !== undefined && (
+                      <div>
+                        <dt className="text-sm text-muted-foreground">Pasajeros Desembarcaron</dt>
+                        <dd className="font-medium">{arrival.passenger_disembark}</dd>
+                      </div>
+                    )}
+                    {arrival.passenger_onboard !== null && arrival.passenger_onboard !== undefined && (
+                      <div>
+                        <dt className="text-sm text-muted-foreground">Pasajeros no Desembarcaron</dt>
+                        <dd className="font-medium">{arrival.passenger_onboard}</dd>
+                      </div>
+                    )}
+                  </>
+                )}
               </dl>
             </CardContent>
           </Card>

@@ -32,7 +32,8 @@ const migrationFiles = [
   '004-add-user-port.sql',
   '005-add-oficial-cim-role.sql',
   '006-add-submitted-status.sql',
-  '007-create-notifications-table.sql'
+  '007-create-notifications-table.sql',
+  '008-add-vessel-type-fields.sql'
 ];
 
 async function runMigrations() {
