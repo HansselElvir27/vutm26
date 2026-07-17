@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   generator: 'v0.app',
   colorScheme: 'light',
   icons: {
-    icon: '/logo-vutm.jpg',
-    apple: '/logo-vutm.jpg',
+    icon: '/logo-vutm.png',
+    apple: '/logo-vutm.png',
   },
 }
 

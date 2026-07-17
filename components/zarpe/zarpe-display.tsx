@@ -185,12 +185,12 @@ export function ZarpeDisplay({ zarpe, vesselName, omiNumber, canApprove = false,
   }
 
   async function handlePrint() {
-    const logoUrl = `${window.location.origin}/logo-vutm.jpg`
+    const logoUrl = `${window.location.origin}/logo-vutm.png`
     // Ensure the zarpe number is properly encoded for the URL
     const zarpeNumberEncoded = encodeURIComponent(zarpe.zarpe_number)
     const verifyUrl = `${window.location.origin}/verificar/${zarpeNumberEncoded}`
     const portLabel = zarpe.port_of_arrival ? getPortLabel(zarpe.port_of_arrival) : 'N/A'
-    
+
     // Generate QR code using client-side library (qrcode)
     let qrDataUrl = ''
     try {
@@ -205,7 +205,7 @@ export function ZarpeDisplay({ zarpe, vesselName, omiNumber, canApprove = false,
     } catch {
       qrDataUrl = ''
     }
-    
+
     const printContent = `
       <!DOCTYPE html>
       <html>
