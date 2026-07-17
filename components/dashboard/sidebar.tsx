@@ -32,7 +32,7 @@ export function DashboardSidebar({ user }: SidebarProps) {
       <div className="p-4 border-b border-sidebar-border">
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image
-            src="/logo-vutm.jpg"
+            src="/logo-vutm.png"
             alt="Marina Mercante"
             width={40}
             height={40}
