@@ -15,7 +15,7 @@ export default async function LoginPage() {
         <div className="text-center mb-8">
           <div className="flex flex-col items-center justify-center mb-4">
             <Image
-              src="/logo-marina-mercante.png"
+              src="/logo-vutm.jpg"
               alt="Marina Mercante de Honduras"
               width={120}
               height={120}

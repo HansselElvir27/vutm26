@@ -185,7 +185,7 @@ export function ZarpeDisplay({ zarpe, vesselName, omiNumber, canApprove = false,
   }
 
   async function handlePrint() {
-    const logoUrl = `${window.location.origin}/logo-marina-mercante.png`
+    const logoUrl = `${window.location.origin}/logo-vutm.jpg`
     // Ensure the zarpe number is properly encoded for the URL
     const zarpeNumberEncoded = encodeURIComponent(zarpe.zarpe_number)
     const verifyUrl = `${window.location.origin}/verificar/${zarpeNumberEncoded}`
