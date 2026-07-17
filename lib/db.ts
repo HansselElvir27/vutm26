@@ -57,6 +57,7 @@ export interface Arrival {
   passenger_total?: number | null
   passenger_disembark?: number | null
   passenger_onboard?: number | null
+  terminal?: string | null
 }
 
 export interface Document {

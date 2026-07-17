@@ -33,7 +33,8 @@ const migrationFiles = [
   '005-add-oficial-cim-role.sql',
   '006-add-submitted-status.sql',
   '007-create-notifications-table.sql',
-  '008-add-vessel-type-fields.sql'
+  '008-add-vessel-type-fields.sql',
+  '009-add-terminal-field.sql'
 ];
 
 async function runMigrations() {
@@ -44,7 +45,7 @@ async function runMigrations() {
       const sqlContent = readFileSync(filePath, 'utf8');
       
       // Execute the migration SQL script
-      await sql(sqlContent);
+      await sql.query(sqlContent);
       console.log(`Migration ${file} completed successfully.`);
     } catch (err) {
       console.error(`Error running migration ${file}:`, err);

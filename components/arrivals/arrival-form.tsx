@@ -41,6 +41,7 @@ interface Arrival {
   passenger_total?: number
   passenger_disembark?: number
   passenger_onboard?: number
+  terminal?: string
 }
 
 interface ArrivalFormProps {
@@ -75,6 +76,16 @@ const vesselTypesEn = [
   'Other',
 ]
 
+const PORT_TERMINALS: Record<string, string[]> = {
+  puerto_castilla: ['Castilla'],
+  puerto_ceiba: ['La Ceiba'],
+  puerto_cortes: ['OPC', 'TEH', 'UNO', 'AVANZA'],
+  puerto_omoa: ['Omoa'],
+  puerto_roatan: ['Naviera Hybur', 'RECO', 'Mahogany bay', 'French Harbour', 'Coxen Hole'],
+  puerto_san_lorenzo: ['San Lorenzo'],
+  puerto_tela: ['Tela'],
+}
+
 const honduranPorts = HONDURAS_PORTS; // Declare the variable here
 
 export function ArrivalForm({ arrival }: ArrivalFormProps) {
@@ -82,6 +93,7 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [port, setPort] = useState(arrival?.port_of_arrival || '')
+  const [terminal, setTerminal] = useState(arrival?.terminal || '')
   const [vesselType, setVesselType] = useState(arrival?.vessel_type || '')
   const [flag, setFlag] = useState(arrival?.flag || '')
   const [lastPortCountry, setLastPortCountry] = useState(arrival?.last_port_country || '')
@@ -112,6 +124,7 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
 
     const formData = new FormData(e.currentTarget)
     formData.set('port_of_arrival', port)
+    formData.set('terminal', terminal)
     formData.set('vessel_type', vesselType)
     formData.set('flag', flag)
     formData.set('last_port_country', lastPortCountry)
@@ -398,7 +411,14 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="port_of_arrival">{t('route.arrivalPort')} *</Label>
-            <Select value={port} onValueChange={setPort} required>
+            <Select 
+              value={port} 
+              onValueChange={(val) => {
+                setPort(val)
+                setTerminal('')
+              }} 
+              required
+            >
               <SelectTrigger>
                 <SelectValue placeholder={t('route.selectPort')} />
               </SelectTrigger>
@@ -411,6 +431,24 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
               </SelectContent>
             </Select>
           </div>
+
+          {port && PORT_TERMINALS[port] && (
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="terminal">Terminal de Arribo *</Label>
+              <Select value={terminal} onValueChange={setTerminal} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccione la terminal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PORT_TERMINALS[port].map((term) => (
+                    <SelectItem key={term} value={term}>
+                      {term}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardContent>
       </Card>
 

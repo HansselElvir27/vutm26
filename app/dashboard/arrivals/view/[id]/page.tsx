@@ -287,6 +287,12 @@ export default async function ArrivalDetailPage({ params }: PageProps) {
                   <dt className="text-sm text-muted-foreground">Puerto de Arribo</dt>
                   <dd className="font-medium">{arrival.port_of_arrival}</dd>
                 </div>
+                {arrival.terminal && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Terminal de Arribo</dt>
+                    <dd className="font-medium">{arrival.terminal}</dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-sm text-muted-foreground">Fecha Estimada de Arribo</dt>
                   <dd className="font-medium">

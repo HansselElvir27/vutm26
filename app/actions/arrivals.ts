@@ -29,6 +29,7 @@ export async function createArrival(formData: FormData) {
   const lastPortName = formData.get('last_port_name') as string
   const lastPortCountry = formData.get('last_port_country') as string
   const portOfArrival = formData.get('port_of_arrival') as string
+  const terminal = formData.get('terminal') as string
   const estimatedArrivalDate = formData.get('estimated_arrival_date') as string
   const estimatedArrivalTime = formData.get('estimated_arrival_time') as string
   const isDonation = formData.get('is_donation') === 'true'
@@ -68,7 +69,7 @@ export async function createArrival(formData: FormData) {
     const result = await sql`
       INSERT INTO arrivals (
         ship_name, omi_number, flag, vessel_type, call_sign, gt, length, breadth,
-        voyage_number, last_port_name, last_port_country, port_of_arrival,
+        voyage_number, last_port_name, last_port_country, port_of_arrival, terminal,
         estimated_arrival_date, estimated_arrival_time, is_donation, is_fast_arrival,
         crew_change, needs_help, observation, created_by, status,
         container_total, container_loaded, container_empty,
@@ -77,7 +78,7 @@ export async function createArrival(formData: FormData) {
         ${shipName}, ${omiNumber}, ${flag || null}, ${vesselType || null},
         ${callSign || null}, ${gt || null}, ${length || null}, ${breadth || null},
         ${voyageNumber || null}, ${lastPortName || null}, ${lastPortCountry || null},
-        ${portOfArrival}, ${estimatedArrivalDate}, ${estimatedArrivalTime || null},
+        ${portOfArrival}, ${terminal || null}, ${estimatedArrivalDate}, ${estimatedArrivalTime || null},
         ${isDonation}, ${isFastArrival}, ${crewChange}, ${needsHelp},
         ${observation || null}, ${session.user.id}, 'pending',
         ${containerTotal}, ${containerLoaded}, ${containerEmpty},
@@ -167,6 +168,7 @@ export async function updateArrival(arrivalId: string, formData: FormData) {
   const lastPortName = formData.get('last_port_name') as string
   const lastPortCountry = formData.get('last_port_country') as string
   const portOfArrival = formData.get('port_of_arrival') as string
+  const terminal = formData.get('terminal') as string
   const estimatedArrivalDate = formData.get('estimated_arrival_date') as string
   const estimatedArrivalTime = formData.get('estimated_arrival_time') as string
   const isDonation = formData.get('is_donation') === 'true'
@@ -197,6 +199,7 @@ export async function updateArrival(arrivalId: string, formData: FormData) {
       last_port_name = ${lastPortName || null},
       last_port_country = ${lastPortCountry || null},
       port_of_arrival = ${portOfArrival},
+      terminal = ${terminal || null},
       estimated_arrival_date = ${estimatedArrivalDate},
       estimated_arrival_time = ${estimatedArrivalTime || null},
       is_donation = ${isDonation},
