@@ -93,20 +93,17 @@ function getNavigationItems(role: User['role'], t: (key: string) => string) {
   const agentItems = [
     { href: '/dashboard/arrivals', label: t('sidebar.myArrivals'), icon: Ship },
     { href: '/dashboard/arrivals/new', label: t('sidebar.newArrival'), icon: ClipboardList },
-    { href: '/dashboard/documents', label: t('sidebar.documents'), icon: FileText },
   ]
 
   const authorityItems = [
     { href: '/dashboard/arrivals', label: t('sidebar.arrivals'), icon: Ship },
     { href: '/dashboard/approvals', label: t('sidebar.approvals'), icon: CheckCircle },
-    { href: '/dashboard/documents', label: t('sidebar.documents'), icon: FileText },
     { href: '/dashboard/analytics', label: t('sidebar.statistics'), icon: BarChart3 },
   ]
 
   const adminItems = [
     { href: '/dashboard/arrivals', label: t('sidebar.allArrivals'), icon: Ship },
     { href: '/dashboard/approvals', label: t('sidebar.approvals'), icon: CheckCircle },
-    { href: '/dashboard/documents', label: t('sidebar.documents'), icon: FileText },
     { href: '/dashboard/analytics', label: t('sidebar.statistics'), icon: BarChart3 },
     { href: '/dashboard/users', label: t('sidebar.users'), icon: Users },
   ]
