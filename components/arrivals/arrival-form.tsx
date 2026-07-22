@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createArrival, updateArrival } from '@/app/actions/arrivals'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -90,6 +91,7 @@ const honduranPorts = HONDURAS_PORTS; // Declare the variable here
 
 export function ArrivalForm({ arrival }: ArrivalFormProps) {
   const { t, language } = useLanguage()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [port, setPort] = useState(arrival?.port_of_arrival || '')
@@ -148,6 +150,8 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
     if (result?.error) {
       setError(result.error)
       setLoading(false)
+    } else if (isEditing && result?.success) {
+      router.push(`/dashboard/arrivals/view/${arrival.id}`)
     }
   }
 
