@@ -45,7 +45,7 @@ export function ApproveAllDocumentsButton({ pendingCount }: ApproveAllDocumentsB
   return (
     <Button 
       onClick={handleApproveAll}
-      disabled={loading || pendingCount === 0}
+      disabled={loading}
       className="bg-green-600 hover:bg-green-700 text-white"
     >
       {loading ? (
