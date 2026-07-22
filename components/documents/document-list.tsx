@@ -316,7 +316,7 @@ export function DocumentList({ documents, userRole, arrivalId }: DocumentListPro
 
       {/* Document Viewer Modal */}
       <Dialog open={!!viewingDocument} onOpenChange={handleClose}>
-        <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
+        <DialogContent className="max-w-[98vw] w-[98vw] h-[96vh] flex flex-col p-0">
           <DialogHeader className="p-4 pb-2 border-b shrink-0">
             <div className="flex items-center justify-between">
               <div>
@@ -384,11 +384,11 @@ export function DocumentList({ documents, userRole, arrivalId }: DocumentListPro
                 </div>
               )}
               {documentUrl && !loading && !error && (
-                <embed
+                <iframe
                   src={documentUrl}
-                  type="application/pdf"
-                  className="w-full h-full"
+                  className="w-full h-full border-0"
                   title={viewingDocument?.file_name}
+                  style={{ minHeight: 0 }}
                 />
               )}
             </div>
