@@ -1,14 +1,28 @@
-import { neon } from '@neondatabase/serverless'
+// import { neon } from '@neondatabase/serverless'
 
-function createSql() {
-  const url = process.env.DATABASE_URL
-  if (!url) {
-    throw new Error('DATABASE_URL environment variable is not set. Please add it in the Vars section of the sidebar.')
-  }
-  return neon(url)
+// function createSql() {
+//   const url = process.env.DATABASE_URL
+//   if (!url) {
+//     throw new Error('DATABASE_URL environment variable is not set. Please add it in the Vars section of the sidebar.')
+//   }
+//   return neon(url)
+// }
+
+// export const sql = createSql()
+
+import postgres from 'postgres'
+
+const url = process.env.DATABASE_URL
+
+if (!url) {
+  throw new Error('DATABASE_URL environment variable is not set.')
 }
 
-export const sql = createSql()
+export const sql = postgres(url, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+})
 
 export type UserRole = 'admin' | 'naviera' | 'capitan_puerto' | 'aduanas' | 'migracion' | 'salud' | 'senassa' | 'oficial_cim'
 
