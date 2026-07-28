@@ -144,6 +144,28 @@ async function getAnalyticsData(userPort: string | null, userRole: string) {
     ${userRole === 'capitan_puerto' && userPort ? sql`WHERE a.port_of_arrival = ${userPort}` : sql``}
   `
 
+  // Get detailed arrivals report for the table
+  const arrivalsReport = await sql`
+    SELECT 
+      a.id,
+      a.ship_name,
+      a.flag,
+      a.omi_number,
+      a.vessel_type,
+      u.company_name as agency_name,
+      u.name as agent_name,
+      a.estimated_arrival_date,
+      a.port_of_arrival,
+      a.terminal,
+      a.status,
+      a.created_at
+    FROM arrivals a
+    LEFT JOIN users u ON a.created_by = u.id
+    ${userRole === 'capitan_puerto' && userPort ? sql`WHERE a.port_of_arrival = ${userPort}` : sql``}
+    ORDER BY a.estimated_arrival_date DESC, a.id DESC
+    LIMIT 200
+  `
+
   return {
     arrivalsByMonth: arrivalsByMonth.reverse(),
     arrivalsByPort,
@@ -164,7 +186,8 @@ async function getAnalyticsData(userPort: string | null, userRole: string) {
     docCompliance: {
       total: Number(docCompliance[0]?.total_arrivals || 0),
       withDocs: Number(docCompliance[0]?.with_docs || 0),
-    }
+    },
+    arrivalsReport,
   }
 }
 

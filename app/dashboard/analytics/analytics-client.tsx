@@ -1,7 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Ship, FileText, Anchor, Users, Clock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Ship, FileText, Anchor, Users, Clock, Download, TableIcon } from 'lucide-react'
 import { 
   BarChart, 
   Bar, 
@@ -40,6 +41,7 @@ interface AnalyticsData {
     total: number
     withDocs: number
   }
+  arrivalsReport: any[]
 }
 
 interface Props {
@@ -97,6 +99,33 @@ export default function AnalyticsClient({ data, userRole, userPort }: Props) {
   const compliancePercent = data.docCompliance.total > 0 
     ? Math.round((data.docCompliance.withDocs / data.docCompliance.total) * 100) 
     : 0
+
+  // CSV export for the arrivals report
+  const exportToCSV = () => {
+    const headers = ['No.', 'Buque', 'Bandera', 'IMO', 'Actividad', 'Agencia Nav', 'Arribo', 'N° Arribo', 'Puerto', 'Muelle/Terminal']
+    const rows = data.arrivalsReport.map((row: any, idx: number) => [
+      idx + 1,
+      row.ship_name || '',
+      row.flag || '',
+      row.omi_number || '',
+      row.vessel_type || '',
+      row.agency_name || row.agent_name || '',
+      row.estimated_arrival_date ? new Date(row.estimated_arrival_date).toLocaleDateString('es-HN') : '',
+      row.id,
+      portLabels[row.port_of_arrival] || row.port_of_arrival || '',
+      row.terminal || '',
+    ])
+    const csvContent = [headers, ...rows]
+      .map(r => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `informe-arribos-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div className="space-y-6">
@@ -394,6 +423,97 @@ export default function AnalyticsClient({ data, userRole, userPort }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Arrivals Report Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <TableIcon className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>Informe de Arribos</CardTitle>
+                <CardDescription>
+                  Listado detallado de todos los buques registrados
+                  {data.arrivalsReport.length >= 200 ? ' (últimos 200 registros)' : ` — ${data.arrivalsReport.length} registro${data.arrivalsReport.length !== 1 ? 's' : ''}`}
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCSV}
+              className="flex items-center gap-2 shrink-0"
+              disabled={data.arrivalsReport.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Exportar CSV
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  {['No.', 'Buque', 'Bandera', 'IMO', 'Actividad', 'Agencia Nav', 'Arribo', 'N° Arribo', 'Puerto', 'Muelle/Terminal'].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {data.arrivalsReport.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
+                      No hay registros de arribos disponibles.
+                    </td>
+                  </tr>
+                ) : (
+                  data.arrivalsReport.map((row: any, idx: number) => (
+                    <tr
+                      key={row.id}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium text-muted-foreground tabular-nums">{idx + 1}</td>
+                      <td className="px-4 py-3 font-semibold whitespace-nowrap max-w-[180px] truncate" title={row.ship_name}>
+                        {row.ship_name || '—'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">{row.flag || '—'}</td>
+                      <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{row.omi_number || '—'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                          {row.vessel_type || '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 max-w-[220px] truncate" title={row.agency_name || row.agent_name}>
+                        {row.agency_name || row.agent_name || '—'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                        {row.estimated_arrival_date
+                          ? new Date(row.estimated_arrival_date).toLocaleDateString('es-HN', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            })
+                          : '—'}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs tabular-nums text-center">{row.id}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {portLabels[row.port_of_arrival] || row.port_of_arrival || '—'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">{row.terminal || '—'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
