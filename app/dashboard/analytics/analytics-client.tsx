@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Ship, FileText, Anchor, Users, Clock, Download, TableIcon } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Ship, FileText, Anchor, Users, Clock, Download, TableIcon, Search, X } from 'lucide-react'
 import { 
   BarChart, 
   Bar, 
@@ -100,10 +102,47 @@ export default function AnalyticsClient({ data, userRole, userPort }: Props) {
     ? Math.round((data.docCompliance.withDocs / data.docCompliance.total) * 100) 
     : 0
 
-  // CSV export for the arrivals report
+  // --- Filter state ---
+  const [filterBuque,    setFilterBuque]    = useState('')
+  const [filterBandera,  setFilterBandera]  = useState('')
+  const [filterImo,      setFilterImo]      = useState('')
+  const [filterAgencia,  setFilterAgencia]  = useState('')
+  const [filterPuerto,   setFilterPuerto]   = useState('')
+  const [filterTerminal, setFilterTerminal] = useState('')
+  const [filterFechaDesde, setFilterFechaDesde] = useState('')
+  const [filterFechaHasta, setFilterFechaHasta] = useState('')
+
+  const activeFiltersCount = [
+    filterBuque, filterBandera, filterImo, filterAgencia,
+    filterPuerto, filterTerminal, filterFechaDesde, filterFechaHasta,
+  ].filter(Boolean).length
+
+  const clearFilters = () => {
+    setFilterBuque(''); setFilterBandera(''); setFilterImo(''); setFilterAgencia('')
+    setFilterPuerto(''); setFilterTerminal(''); setFilterFechaDesde(''); setFilterFechaHasta('')
+  }
+
+  const filteredRows = data.arrivalsReport.filter((row: any) => {
+    const q = (v: string | null | undefined) => (v || '').toLowerCase()
+    if (filterBuque    && !q(row.ship_name).includes(filterBuque.toLowerCase()))   return false
+    if (filterBandera  && !q(row.flag).includes(filterBandera.toLowerCase()))       return false
+    if (filterImo      && !q(row.omi_number).includes(filterImo.toLowerCase()))     return false
+    if (filterAgencia  && !(q(row.agency_name) + ' ' + q(row.agent_name)).includes(filterAgencia.toLowerCase())) return false
+    if (filterPuerto   && !(q(row.port_of_arrival) + ' ' + q(portLabels[row.port_of_arrival])).includes(filterPuerto.toLowerCase())) return false
+    if (filterTerminal && !q(row.terminal).includes(filterTerminal.toLowerCase()))  return false
+    if (filterFechaDesde && row.estimated_arrival_date) {
+      if (new Date(row.estimated_arrival_date) < new Date(filterFechaDesde)) return false
+    }
+    if (filterFechaHasta && row.estimated_arrival_date) {
+      if (new Date(row.estimated_arrival_date) > new Date(filterFechaHasta)) return false
+    }
+    return true
+  })
+
+  // CSV export for the arrivals report (uses filtered rows)
   const exportToCSV = () => {
     const headers = ['No.', 'Buque', 'Bandera', 'IMO', 'Actividad', 'Agencia Nav', 'Arribo', 'N° Arribo', 'Puerto', 'Muelle/Terminal']
-    const rows = data.arrivalsReport.map((row: any, idx: number) => [
+    const rows = filteredRows.map((row: any, idx: number) => [
       idx + 1,
       row.ship_name || '',
       row.flag || '',
@@ -433,21 +472,125 @@ export default function AnalyticsClient({ data, userRole, userPort }: Props) {
               <div>
                 <CardTitle>Informe de Arribos</CardTitle>
                 <CardDescription>
-                  Listado detallado de todos los buques registrados
-                  {data.arrivalsReport.length >= 200 ? ' (últimos 200 registros)' : ` — ${data.arrivalsReport.length} registro${data.arrivalsReport.length !== 1 ? 's' : ''}`}
+                  {activeFiltersCount > 0
+                    ? `${filteredRows.length} resultado${filteredRows.length !== 1 ? 's' : ''} de ${data.arrivalsReport.length} registros`
+                    : data.arrivalsReport.length >= 200
+                      ? `Últimos 200 registros`
+                      : `${data.arrivalsReport.length} registro${data.arrivalsReport.length !== 1 ? 's' : ''}`}
                 </CardDescription>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportToCSV}
-              className="flex items-center gap-2 shrink-0"
-              disabled={data.arrivalsReport.length === 0}
-            >
-              <Download className="h-4 w-4" />
-              Exportar CSV
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {activeFiltersCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 text-muted-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Limpiar ({activeFiltersCount})
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToCSV}
+                className="flex items-center gap-2"
+                disabled={filteredRows.length === 0}
+              >
+                <Download className="h-4 w-4" />
+                Exportar CSV
+              </Button>
+            </div>
+          </div>
+
+          {/* Filter inputs */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-3 border-t">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Buque"
+                value={filterBuque}
+                onChange={e => setFilterBuque(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Bandera"
+                value={filterBandera}
+                onChange={e => setFilterBandera(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="IMO"
+                value={filterImo}
+                onChange={e => setFilterImo(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Agencia Naviera"
+                value={filterAgencia}
+                onChange={e => setFilterAgencia(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Puerto"
+                value={filterPuerto}
+                onChange={e => setFilterPuerto(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Muelle/Terminal"
+                value={filterTerminal}
+                onChange={e => setFilterTerminal(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Input
+                type="date"
+                value={filterFechaDesde}
+                onChange={e => setFilterFechaDesde(e.target.value)}
+                className="h-9 text-sm"
+                title="Fecha de arribo desde"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Input
+                type="date"
+                value={filterFechaHasta}
+                onChange={e => setFilterFechaHasta(e.target.value)}
+                className="h-9 text-sm"
+                title="Fecha de arribo hasta"
+              />
+            </div>
+          </div>
+
+          {/* Date range labels */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 -mt-2">
+            <div className="col-start-1 hidden lg:block" />
+            <div className="col-start-1 hidden lg:block" />
+            <div className="col-start-1 hidden lg:block" />
+            <div className="col-start-1 hidden lg:block" />
+            <div className="col-start-1 hidden lg:block" />
+            <div className="hidden lg:block" />
+            <p className="text-[11px] text-muted-foreground px-1">Desde</p>
+            <p className="text-[11px] text-muted-foreground px-1">Hasta</p>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -466,14 +609,24 @@ export default function AnalyticsClient({ data, userRole, userPort }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {data.arrivalsReport.length === 0 ? (
+                {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
-                      No hay registros de arribos disponibles.
+                    <td colSpan={10} className="px-4 py-10 text-center">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <Search className="h-8 w-8 opacity-30" />
+                        <p className="text-sm font-medium">
+                          {activeFiltersCount > 0 ? 'Sin resultados para los filtros aplicados' : 'No hay registros de arribos disponibles.'}
+                        </p>
+                        {activeFiltersCount > 0 && (
+                          <button onClick={clearFilters} className="text-xs text-primary underline underline-offset-2">
+                            Limpiar filtros
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (
-                  data.arrivalsReport.map((row: any, idx: number) => (
+                  filteredRows.map((row: any, idx: number) => (
                     <tr
                       key={row.id}
                       className="hover:bg-muted/30 transition-colors"
