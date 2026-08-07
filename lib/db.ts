@@ -24,6 +24,19 @@ export const sql = postgres(url, {
   connect_timeout: 10,
 })
 
+// Auto-run migrations for security fields to prevent database schema mismatch on startup
+sql`
+  ALTER TABLE users 
+  ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP DEFAULT NULL
+`.then(() => {
+  // Try creating the index as well
+  return sql`CREATE INDEX IF NOT EXISTS idx_users_locked_until ON users(locked_until) WHERE locked_until IS NOT NULL`
+}).catch(err => {
+  console.warn('Note: Automatic security columns migration check: ', err.message)
+})
+
+
 export type UserRole = 'admin' | 'naviera' | 'capitan_puerto' | 'aduanas' | 'migracion' | 'salud' | 'senassa' | 'oficial_cim'
 
 export interface User {

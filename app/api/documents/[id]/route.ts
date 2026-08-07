@@ -56,8 +56,8 @@ export async function GET(
     if (doc.file_url) {
       try {
         fileBuffer = await fs.readFile(doc.file_url)
-      } catch (err) {
-        console.warn(`File not found at file_url: ${doc.file_url}, checking file_data fallback...`, err)
+      } catch {
+        // Archivo no encontrado en disco — intentar fallback en BD
         if (doc.file_data) {
           fileBuffer = Buffer.from(doc.file_data, 'base64')
         } else {

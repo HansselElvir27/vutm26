@@ -62,7 +62,7 @@ export async function createUser(data: {
     return { success: true }
   } catch (error: any) {
     console.error('Error creating user:', error)
-    return { error: error.message || 'Error interno del servidor al crear usuario' }
+    return { error: 'Error al crear el usuario. Intente nuevamente.' }
   }
 }
 
@@ -144,7 +144,7 @@ export async function updateUser(id: number, data: {
     return { success: true }
   } catch (error: any) {
     console.error('Error updating user:', error)
-    return { error: error.message || 'Error interno del servidor al actualizar usuario' }
+    return { error: 'Error al actualizar el usuario. Intente nuevamente.' }
   }
 }
 
@@ -167,6 +167,6 @@ export async function deleteUser(id: number) {
     return { success: true }
   } catch (error: any) {
     console.error('Error deleting user:', error)
-    return { error: error.message || 'Error al eliminar el usuario' }
+    return { error: 'Error al eliminar el usuario. Intente nuevamente.' }
   }
 }
