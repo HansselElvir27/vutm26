@@ -360,8 +360,11 @@ export default async function ArrivalDetailPage({ params }: PageProps) {
                 {isAuthority && documents.length > 0 && (
                   <ApproveAllDocumentsButton pendingCount={documents.filter((d: any) => !d.approvals || d.approvals.length === 0).length} />
                 )}
-                {isOwner && (
-                  <DocumentUpload arrivalId={id} />
+                {(isOwner || user.role === 'admin') && (
+                  <DocumentUpload 
+                    arrivalId={id} 
+                    existingDocumentTypes={documents.map((d: any) => d.document_type)}
+                  />
                 )}
               </div>
             </CardHeader>

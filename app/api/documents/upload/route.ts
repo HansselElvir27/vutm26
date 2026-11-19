@@ -29,11 +29,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Arribo no encontrado' }, { status: 404 })
     }
 
-    const isOwner = arrival[0].created_by === session.user.id
+    const isOwner = Number(arrival[0].created_by) === Number(session.user.id)
     const isAuthority = ['capitan_puerto', 'aduanas', 'migracion', 'salud', 'senassa', 'admin'].includes(session.user.role)
 
     if (!isOwner && !isAuthority) {
       return NextResponse.json({ error: 'No tiene permiso para subir documentos a este arribo' }, { status: 403 })
+    }
+
+    // Verify that this document type hasn't already been uploaded for this arrival
+    const existingDoc = await sql`
+      SELECT id FROM documents 
+      WHERE arrival_id = ${arrivalId} 
+        AND UPPER(document_type) = UPPER(${documentType})
+    `
+
+    if (existingDoc.length > 0) {
+      return NextResponse.json({ 
+        error: `El documento de tipo "${documentType}" ya ha sido subido para este arribo` 
+      }, { status: 400 })
     }
 
     // Save file to disk
