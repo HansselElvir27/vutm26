@@ -148,11 +148,11 @@ export async function updateArrival(arrivalId: string, formData: FormData) {
     return { error: 'Arribo no encontrado' }
   }
 
-  if (session.user.role === 'naviera' && arrival[0].created_by !== session.user.id) {
+  if (session.user.role === 'naviera' && Number(arrival[0].created_by) !== Number(session.user.id)) {
     return { error: 'No tiene permiso para editar este arribo' }
   }
 
-  if (arrival[0].status !== 'pending' && session.user.role !== 'admin') {
+  if (arrival[0].status?.trim() !== 'pending' && session.user.role !== 'admin') {
     return { error: 'Este arribo ya no puede ser editado' }
   }
 
@@ -217,9 +217,38 @@ export async function updateArrival(arrivalId: string, formData: FormData) {
     WHERE id = ${arrivalId}
   `
 
+  // Handle optional document uploads on update
+  const noaDocument = formData.get('noa_document') as File | null
+  const fal1Document = formData.get('fal1_document') as File | null
+
+  if (noaDocument && noaDocument.size > 0) {
+    const noaBuffer = Buffer.from(await noaDocument.arrayBuffer())
+    const noaPath = await saveFileToDisk(Number(arrivalId), 'NOA', noaDocument.name, noaBuffer)
+    await sql`
+      INSERT INTO documents (arrival_id, document_type, file_name, file_url, file_data, file_size, mime_type, uploaded_by)
+      VALUES (
+        ${arrivalId}, 'NOA', ${noaDocument.name}, ${noaPath}, NULL, ${noaDocument.size},
+        ${noaDocument.type || 'application/pdf'}, ${session.user.id}
+      )
+    `
+  }
+
+  if (fal1Document && fal1Document.size > 0) {
+    const fal1Buffer = Buffer.from(await fal1Document.arrayBuffer())
+    const fal1Path = await saveFileToDisk(Number(arrivalId), 'FAL1', fal1Document.name, fal1Buffer)
+    await sql`
+      INSERT INTO documents (arrival_id, document_type, file_name, file_url, file_data, file_size, mime_type, uploaded_by)
+      VALUES (
+        ${arrivalId}, 'FAL1', ${fal1Document.name}, ${fal1Path}, NULL, ${fal1Document.size},
+        ${fal1Document.type || 'application/pdf'}, ${session.user.id}
+      )
+    `
+  }
+
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/arrivals')
   revalidatePath(`/dashboard/arrivals/view/${arrivalId}`)
+  revalidatePath(`/dashboard/arrivals/view/${arrivalId}/edit`)
   
   return { success: true }
 }

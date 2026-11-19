@@ -29,7 +29,7 @@ interface Arrival {
   last_port_name?: string
   last_port_country?: string
   port_of_arrival: string
-  estimated_arrival_date: string
+  estimated_arrival_date: string | Date
   estimated_arrival_time?: string
   is_donation?: boolean
   is_fast_arrival?: boolean
@@ -147,11 +147,12 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
       ? await updateArrival(arrival.id.toString(), formData)
       : await createArrival(formData)
 
-    if (result?.error) {
+    if (result && 'error' in result && result.error) {
       setError(result.error)
       setLoading(false)
-    } else if (isEditing && result?.success) {
+    } else if (isEditing && result && 'success' in result && result.success) {
       router.push(`/dashboard/arrivals/view/${arrival.id}`)
+      router.refresh()
     }
   }
 
@@ -473,7 +474,15 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
               id="estimated_arrival_date"
               name="estimated_arrival_date"
               type="date"
-              defaultValue={arrival?.estimated_arrival_date ? arrival.estimated_arrival_date.split('T')[0] : ''}
+              defaultValue={
+                arrival?.estimated_arrival_date
+                  ? arrival.estimated_arrival_date instanceof Date
+                    ? arrival.estimated_arrival_date.toISOString().split('T')[0]
+                    : typeof arrival.estimated_arrival_date === 'string'
+                      ? arrival.estimated_arrival_date.split('T')[0]
+                      : ''
+                  : ''
+              }
               required
             />
           </div>
@@ -484,7 +493,11 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
               id="estimated_arrival_time"
               name="estimated_arrival_time"
               type="time"
-              defaultValue={arrival?.estimated_arrival_time || ''}
+              defaultValue={
+                arrival?.estimated_arrival_time
+                  ? String(arrival.estimated_arrival_time).slice(0, 5)
+                  : ''
+              }
             />
           </div>
         </CardContent>
@@ -674,7 +687,16 @@ export function ArrivalForm({ arrival }: ArrivalFormProps) {
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
+        {isEditing && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push(`/dashboard/arrivals/view/${arrival.id}`)}
+          >
+            {t('common.cancel') || 'Cancelar'}
+          </Button>
+        )}
         <Button type="submit" disabled={loading}>
           <Save className="w-4 h-4 mr-2" />
           {loading ? t('status.saving') : isEditing ? t('arrivals.updateArrival') : t('arrivals.createNotification')}

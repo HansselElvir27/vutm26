@@ -87,12 +87,12 @@ export function ArrivalActions({
   return (
     <div className="flex flex-wrap gap-2">
       {canEdit && (
-        <Link href={`/dashboard/arrivals/view/${arrivalId}/edit`}>
-          <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/dashboard/arrivals/view/${arrivalId}/edit`}>
             <Edit className="w-4 h-4 mr-2" />
             Editar
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       )}
 
       {canSubmit && (

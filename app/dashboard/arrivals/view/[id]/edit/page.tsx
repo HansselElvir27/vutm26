@@ -33,15 +33,28 @@ export default async function EditArrivalPage({ params }: PageProps) {
   }
 
   // Solo el dueño (naviera) o admin pueden editar, y solo en estado 'pending'
-  const isOwner = arrival.created_by === session.user.id
+  const isOwner = Number(arrival.created_by) === Number(session.user.id)
   const isAdmin = session.user.role === 'admin'
+  const isPending = arrival.status?.trim() === 'pending'
 
   if (!isOwner && !isAdmin) {
     redirect(`/dashboard/arrivals/view/${id}`)
   }
 
-  if (arrival.status !== 'pending' && !isAdmin) {
+  if (!isPending && !isAdmin) {
     redirect(`/dashboard/arrivals/view/${id}`)
+  }
+
+  const formattedArrival = {
+    ...arrival,
+    estimated_arrival_date: arrival.estimated_arrival_date instanceof Date
+      ? arrival.estimated_arrival_date.toISOString().split('T')[0]
+      : typeof arrival.estimated_arrival_date === 'string'
+        ? arrival.estimated_arrival_date.split('T')[0]
+        : arrival.estimated_arrival_date,
+    estimated_arrival_time: arrival.estimated_arrival_time
+      ? String(arrival.estimated_arrival_time).slice(0, 5)
+      : arrival.estimated_arrival_time,
   }
 
   return (
@@ -52,7 +65,7 @@ export default async function EditArrivalPage({ params }: PageProps) {
           Modifique los datos de la notificacion de arribo para <span className="font-medium">{arrival.ship_name}</span>
         </p>
       </div>
-      <ArrivalForm arrival={arrival} />
+      <ArrivalForm arrival={formattedArrival as any} />
     </div>
   )
 }

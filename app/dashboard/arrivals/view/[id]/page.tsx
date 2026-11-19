@@ -107,11 +107,12 @@ export default async function ArrivalDetailPage({ params }: PageProps) {
   }
 
   const { user } = session
-  const isOwner = arrival.created_by === user.id
+  const isOwner = Number(arrival.created_by) === Number(user.id)
   const isAuthority = ['capitan_puerto', 'aduanas', 'migracion', 'salud', 'senassa', 'oficial_cim', 'admin'].includes(user.role)
-  const canEdit = isOwner && arrival.status === 'pending'
-  const canSubmit = isOwner && arrival.status === 'pending'
-  const canDelete = isOwner && arrival.status === 'pending'
+  const isPending = arrival.status?.trim() === 'pending'
+  const canEdit = (isOwner || user.role === 'admin') && isPending
+  const canSubmit = isOwner && isPending
+  const canDelete = (isOwner || user.role === 'admin') && isPending
   const canApprove = isAuthority && ['submitted', 'approved_by_captain', 'documents_complete'].includes(arrival.status)
   // La naviera solicita el zarpe cuando el arribo está listo
   const canRequestZarpe = (isOwner || user.role === 'naviera') && arrival.status === 'ready_for_zarpe'
