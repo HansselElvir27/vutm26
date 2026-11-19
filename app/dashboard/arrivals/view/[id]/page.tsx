@@ -13,6 +13,7 @@ import { ZarpeIssue } from '@/components/zarpe/zarpe-issue'
 import { ZarpeDisplay } from '@/components/zarpe/zarpe-display'
 import { getZarpe } from '@/app/actions/zarpe'
 import { ApproveAllDocumentsButton } from '@/components/approvals/approve-all-documents-button'
+import { canRoleApproveDocument } from '@/lib/document-permissions'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -121,6 +122,17 @@ export default async function ArrivalDetailPage({ params }: PageProps) {
   const documents = await getDocuments(id)
   const approvals = await getApprovals(id)
   const zarpe = await getZarpe(id)
+
+  const myPendingDocumentsCount = isAuthority
+    ? documents.filter((doc: any) => {
+        const canApprove = user.role === 'admin' || canRoleApproveDocument(user.role, doc.document_type)
+        if (!canApprove) return false
+        const alreadyApproved = doc.approvals?.some(
+          (a: any) => a.approver_role === user.role && a.approved
+        )
+        return !alreadyApproved
+      }).length
+    : 0
 
   const status = statusConfig[arrival.status as keyof typeof statusConfig] || statusConfig.pending
   const StatusIcon = status.icon
@@ -358,7 +370,7 @@ export default async function ArrivalDetailPage({ params }: PageProps) {
               </div>
               <div className="flex items-center gap-2">
                 {isAuthority && documents.length > 0 && (
-                  <ApproveAllDocumentsButton pendingCount={documents.filter((d: any) => !d.approvals || d.approvals.length === 0).length} />
+                  <ApproveAllDocumentsButton arrivalId={id} pendingCount={myPendingDocumentsCount} />
                 )}
                 {(isOwner || user.role === 'admin') && (
                   <DocumentUpload 

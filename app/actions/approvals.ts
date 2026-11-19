@@ -10,6 +10,7 @@ import {
   notifyNewArrivalForAuthority,
   notifyReadyForZarpe 
 } from './notifications'
+import { documentPermissions, canRoleApproveDocument } from '@/lib/document-permissions'
 
 export async function approveArrival(arrivalId: string, comments?: string) {
   const session = await getSession()
@@ -181,27 +182,44 @@ export async function approveDocument(documentId: string, comments?: string) {
     return { error: 'No tiene permiso para aprobar documentos' }
   }
 
-  // Check if already approved by this user
-  const existing = await sql`
-    SELECT * FROM document_approvals WHERE document_id = ${documentId} AND approved_by = ${session.user.id}
-  `
-  if (existing.length > 0) {
-    return { error: 'Ya aprobo este documento' }
+  try {
+    const document = await sql`
+      SELECT d.* FROM documents d WHERE d.id = ${documentId}
+    `
+    if (document.length === 0) {
+      return { error: 'Documento no encontrado' }
+    }
+
+    if (session.user.role !== 'admin' && !canRoleApproveDocument(session.user.role, document[0].document_type)) {
+      return { error: 'No tiene permiso para aprobar este tipo de documento' }
+    }
+
+    await sql`
+      INSERT INTO document_approvals (document_id, approved_by, approved, approver_role, comments)
+      VALUES (${documentId}, ${session.user.id}, true, ${session.user.role}, ${comments || null})
+      ON CONFLICT (document_id, approver_role)
+      DO UPDATE SET
+        approved = true,
+        approved_by = ${session.user.id},
+        comments = COALESCE(EXCLUDED.comments, document_approvals.comments),
+        approved_at = CURRENT_TIMESTAMP
+    `
+
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/documents')
+    revalidatePath('/dashboard/approvals')
+    if (document[0].arrival_id) {
+      revalidatePath(`/dashboard/arrivals/view/${document[0].arrival_id}`)
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error approving document:', error)
+    return { error: 'Error al aprobar el documento' }
   }
-
-  await sql`
-    INSERT INTO document_approvals (document_id, approved_by, approved, approver_role, comments)
-    VALUES (${documentId}, ${session.user.id}, true, ${session.user.role}, ${comments || null})
-  `
-
-  revalidatePath('/dashboard')
-  revalidatePath('/dashboard/documents')
-  revalidatePath('/dashboard/approvals')
-
-  return { success: true }
 }
 
-export async function approveAllDocuments(comments?: string) {
+export async function approveAllDocuments(arrivalIdOrComments?: string | number, comments?: string) {
   const session = await getSession()
   if (!session) {
     return { error: 'No autorizado' }
@@ -212,30 +230,75 @@ export async function approveAllDocuments(comments?: string) {
     return { error: 'No tiene permiso para aprobar documentos' }
   }
 
-  // Get all documents not yet approved by this user
-  const pendingDocs = await sql`
-    SELECT d.id FROM documents d
-    WHERE d.id NOT IN (
-      SELECT document_id FROM document_approvals WHERE approved_by = ${session.user.id}
-    )
-  `
+  let arrivalId: string | number | undefined
+  let commentStr: string | undefined = comments
 
-  if (pendingDocs.length === 0) {
-    return { message: 'No hay documentos pendientes para aprobar', success: true }
+  if (typeof arrivalIdOrComments === 'number' || (typeof arrivalIdOrComments === 'string' && /^\d+$/.test(arrivalIdOrComments))) {
+    arrivalId = arrivalIdOrComments
+  } else if (typeof arrivalIdOrComments === 'string') {
+    commentStr = arrivalIdOrComments
   }
 
-  for (const doc of pendingDocs) {
-    await sql`
-      INSERT INTO document_approvals (document_id, approved_by, approved, approver_role, comments)
-      VALUES (${doc.id}, ${session.user.id}, true, ${session.user.role}, ${comments || null})
-    `
+  try {
+    let pendingDocs: any[] = []
+
+    if (arrivalId) {
+      pendingDocs = await sql`
+        SELECT d.id, d.document_type, d.arrival_id FROM documents d
+        WHERE d.arrival_id = ${arrivalId}
+          AND d.id NOT IN (
+            SELECT document_id FROM document_approvals
+            WHERE approver_role = ${session.user.role} AND approved = true
+          )
+      `
+    } else {
+      pendingDocs = await sql`
+        SELECT d.id, d.document_type, d.arrival_id FROM documents d
+        JOIN arrivals a ON d.arrival_id = a.id
+        WHERE d.id NOT IN (
+          SELECT document_id FROM document_approvals
+          WHERE approver_role = ${session.user.role} AND approved = true
+        )
+      `
+    }
+
+    // Filter documents by role permissions if not admin
+    if (session.user.role !== 'admin') {
+      const allowedDocTypes = (documentPermissions[session.user.role] || []).map(t => t.toUpperCase())
+      pendingDocs = pendingDocs.filter(doc => 
+        allowedDocTypes.includes((doc.document_type || '').toUpperCase())
+      )
+    }
+
+    if (pendingDocs.length === 0) {
+      return { message: 'No hay documentos pendientes para aprobar', success: true, approved: 0 }
+    }
+
+    for (const doc of pendingDocs) {
+      await sql`
+        INSERT INTO document_approvals (document_id, approved_by, approved, approver_role, comments)
+        VALUES (${doc.id}, ${session.user.id}, true, ${session.user.role}, ${commentStr || null})
+        ON CONFLICT (document_id, approver_role)
+        DO UPDATE SET
+          approved = true,
+          approved_by = ${session.user.id},
+          comments = COALESCE(EXCLUDED.comments, document_approvals.comments),
+          approved_at = CURRENT_TIMESTAMP
+      `
+    }
+
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/documents')
+    revalidatePath('/dashboard/approvals')
+    if (arrivalId) {
+      revalidatePath(`/dashboard/arrivals/view/${arrivalId}`)
+    }
+
+    return { success: true, approved: pendingDocs.length }
+  } catch (error) {
+    console.error('Error approving all documents:', error)
+    return { error: 'Error al aprobar los documentos. Por favor intente nuevamente.' }
   }
-
-  revalidatePath('/dashboard')
-  revalidatePath('/dashboard/documents')
-  revalidatePath('/dashboard/approvals')
-
-  return { success: true, approved: pendingDocs.length }
 }
 
 export async function rejectDocument(documentId: string, comments: string) {

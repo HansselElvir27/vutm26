@@ -98,23 +98,29 @@ export const documentPermissions: Record<string, string[]> = {
 }
 
 export function canViewDocument(userRole: string, documentType: string): boolean {
+  if (userRole === 'admin' || userRole === 'naviera') return true
   const allowedTypes = documentPermissions[userRole]
   if (!allowedTypes) return false
-  return allowedTypes.includes(documentType)
+  const upperDocType = (documentType || '').toUpperCase()
+  return allowedTypes.some(t => t.toUpperCase() === upperDocType)
 }
 
 export function filterDocumentsByRole(documents: any[], userRole: string): any[] {
+  if (userRole === 'admin' || userRole === 'naviera') return documents
   const allowedTypes = documentPermissions[userRole]
   if (!allowedTypes) return []
-  return documents.filter(doc => allowedTypes.includes(doc.document_type))
+  const upperAllowed = allowedTypes.map(t => t.toUpperCase())
+  return documents.filter(doc => upperAllowed.includes((doc.document_type || '').toUpperCase()))
 }
 
 export function canRoleApproveDocument(userRole: string, documentType: string): boolean {
+  if (userRole === 'admin') return true
   // Only authority roles can approve documents
-  const authorityRoles = ['capitan_puerto', 'aduanas', 'migracion', 'salud', 'senassa', 'admin']
+  const authorityRoles = ['capitan_puerto', 'aduanas', 'migracion', 'salud', 'senassa', 'oficial_cim', 'admin']
   if (!authorityRoles.includes(userRole)) return false
   
   const allowedTypes = documentPermissions[userRole]
   if (!allowedTypes) return false
-  return allowedTypes.includes(documentType)
+  const upperDocType = (documentType || '').toUpperCase()
+  return allowedTypes.some(t => t.toUpperCase() === upperDocType)
 }
